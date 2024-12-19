@@ -1,10 +1,11 @@
 import sys
 
-# TODO: make grid and directions global variables somehow, so won't have to pass
-# TODO: better function name for countMatches
-# TODO: split functions?
+# TODO: make grid , word and directions global variables somehow, so won't have to pass
+# TODO: split isWordConnected into isWordConnected and isCharacterConnected
 # TODO: add comments and readme
+# TODO: type hinting
 # TODO: publish to github as separate project
+
 
 def main() -> None:
 
@@ -13,9 +14,9 @@ def main() -> None:
     except IndexError:
         exit("Usage: python day4.py filename")
 
-    grid = createGridFromFile(filename)
+    grid: list[list] = createGridFromFile(filename)
 
-    word = input("Enter target word: ")
+    word = input("Enter target word: ").upper()
     firstLetter = word[0]
 
     numMatches = 0
@@ -33,17 +34,21 @@ def main() -> None:
     # Go over every character in the grid
     for row in range(len(grid)):
         for col in range(len(grid[row])):
-            # If the first letter of the word is found, search for the rest of 
+            # If the first letter of the word is found, search for the rest of
             # the word in every possible direction and count the number of matches
             if grid[row][col] == firstLetter:
                 for direction in directions:
-                    numMatches += countMatches(row, col, grid, word[1:], word, direction)
-                
+                    if isWordConnected(row, col, grid, word[1:], word, direction):
+                        numMatches += 1
 
-    print(f"{word} occurs {numMatches} times")
+    print(f"{word} occurs {numMatches} times in {filename}!")
 
 
-def countMatches(row, col, grid, string, word, direction):
+def isWordConnected(row, col, grid, string, word, direction) -> bool:
+    # Base case for recursion (empty string means whole word found)
+    if not string:
+        return True
+
     directions = {
         "up": {"row": row - 1, "col": col},
         "down": {"row": row + 1, "col": col},
@@ -54,15 +59,10 @@ def countMatches(row, col, grid, string, word, direction):
         "bottomLeft": {"row": row + 1, "col": col - 1},
         "bottomRight": {"row": row + 1, "col": col + 1},
     }
-  
 
     targetRow = directions[direction]["row"]
     targetCol = directions[direction]["col"]
 
-    # Complete string has been found
-    if not string:
-        return 1
-    
     targetChar = string[0]
 
     if isValidCoordinate(targetRow, targetCol, grid):
@@ -70,20 +70,18 @@ def countMatches(row, col, grid, string, word, direction):
 
         # If target character has been found, search the next one
         if char == targetChar:
-            return countMatches(
+            return isWordConnected(
                 targetRow, targetCol, grid, string[1:], word, direction
             )
-   
-    return 0
+
+    return False
 
 
-
-
-
-def isValidCoordinate(rowIndex, colIndex, grid):
-    maxRowIndex = len(grid) - 1
-    maxColIndex = len(grid[0]) - 1
-    return 0 <= rowIndex <= maxRowIndex and 0 <= colIndex <= maxColIndex
+def isValidCoordinate(row, col, grid) -> bool:
+    minIdx = 0
+    maxRowIdx = len(grid) - 1
+    maxColIdx = len(grid[0]) - 1
+    return (minIdx <= row <= maxRowIdx) and (minIdx <= col <= maxColIdx)
 
 
 def createGridFromFile(filename) -> list[list]:
@@ -91,11 +89,9 @@ def createGridFromFile(filename) -> list[list]:
 
     with open(filename) as file:
         for line in file:
-            line = line.replace("\n", "")
-            row: list[str] = []
-            for char in line:
-                row.append(char)
-
+            line = line.strip()
+            line = line.upper()
+            row = list(line)
             grid.append(row)
 
     return grid
