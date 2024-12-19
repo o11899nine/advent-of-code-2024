@@ -37,16 +37,17 @@ def main() -> None:
             # If the first letter of the word is found, search for the rest of
             # the word in every possible direction and count the number of matches
             if grid[row][col] == firstLetter:
+                charsLeft = word[1:]
                 for direction in directions:
-                    if isWordConnected(row, col, grid, word[1:], word, direction):
+                    if isWordConnected(row, col, grid, charsLeft, word, direction):
                         numMatches += 1
 
     print(f"{word} occurs {numMatches} times in {filename}!")
 
 
-def isWordConnected(row, col, grid, string, word, direction) -> bool:
+def isWordConnected(row, col, grid, charsLeft, word, direction) -> bool:
     # Base case for recursion (empty string means whole word found)
-    if not string:
+    if not charsLeft:
         return True
 
     directions = {
@@ -63,7 +64,7 @@ def isWordConnected(row, col, grid, string, word, direction) -> bool:
     targetRow = directions[direction]["row"]
     targetCol = directions[direction]["col"]
 
-    targetChar = string[0]
+    targetChar = charsLeft[0]
 
     if isValidCoordinate(targetRow, targetCol, grid):
         char = grid[targetRow][targetCol]
@@ -71,7 +72,7 @@ def isWordConnected(row, col, grid, string, word, direction) -> bool:
         # If target character has been found, search the next one
         if char == targetChar:
             return isWordConnected(
-                targetRow, targetCol, grid, string[1:], word, direction
+                targetRow, targetCol, grid, charsLeft[1:], word, direction
             )
 
     return False
