@@ -4,7 +4,76 @@ import sys
 # TODO: split isWordConnected into isWordConnected and isCharacterConnected
 # TODO: add comments and readme
 # TODO: type hinting
-# TODO: publish to github as separate project
+
+
+class Puzzle:
+    def __init__(self, filename: str, targetWord: str) -> None:
+        self.filename: str = filename
+        self.targetWord: str = targetWord
+        self.grid: list[list[str]] = createGridFromFile(filename)
+
+    def solve(self) -> int:
+        firstLetter = self.targetWord[0]
+
+        numMatches = 0
+        directions = ["N","S","W","E","NW","NE","SW","SE"]
+
+        # Go over every character in the grid
+        for row in range(len(self.grid)):
+            for col in range(len(self.grid[row])):
+                # If the first letter of the word is found, search for the rest of
+                # the word in every possible direction and count the number of matches
+                if self.grid[row][col] == firstLetter:
+                    charsLeft = self.targetWord[1:]
+                    for direction in directions:
+                        if self.isWordConnected(row, col, charsLeft, self.targetWord, direction):
+                            numMatches += 1
+        return numMatches
+    
+    def isWordConnected(self, curRow, curCol, lettersLeft, word, direction) -> bool:
+    # Base case for recursion (empty string means whole word found)
+        if not lettersLeft:
+            return True
+        
+        targetLetter = lettersLeft[0]
+        if self.isTargetLetterConnected(curRow, curCol, targetLetter, direction):
+            return self.isWordConnected(
+                    nextRow, nextCol, lettersLeft[1:], word, directio
+                
+
+        return False
+
+    def isTargetLetterConnected(self, curRow, curCol, targetLetter, direction):
+        nextRow, nextCol = self.getNextCoordinateInDirection(curRow, curCol, direction)
+
+        if self.isValidCoordinate(nextRow, nextCol, self.grid):
+            nextLetter = self.grid[nextRow][nextCol]
+            if nextLetter == targetLetter:
+                return True
+        return False
+
+    def getNextCoordinateInDirection(row, col, direction):
+        directions = {
+            "N": {"row": row - 1, "col": col},
+            "S": {"row": row + 1, "col": col},
+            "W": {"row": row, "col": col - 1},
+            "E": {"row": row, "col": col + 1},
+            "NW": {"row": row - 1, "col": col - 1},
+            "NE": {"row": row - 1, "col": col + 1},
+            "SW": {"row": row + 1, "col": col - 1},
+            "SE": {"row": row + 1, "col": col + 1},
+        }
+
+        nextRow = directions[direction][row]
+        nextCol = directions[direction][col]
+
+        return nextRow, nextCol
+
+    def isValidCoordinate(row, col, grid) -> bool:
+        minIdx = 0
+        maxRowIdx = len(grid) - 1
+        maxColIdx = len(grid[0]) - 1
+        return (minIdx <= row <= maxRowIdx) and (minIdx <= col <= maxColIdx)
 
 
 def main() -> None:
@@ -14,75 +83,10 @@ def main() -> None:
     except IndexError:
         exit("Usage: python day4.py filename")
 
-    grid: list[list] = createGridFromFile(filename)
-
-    word = input("Enter target word: ").upper()
-    firstLetter = word[0]
-
-    numMatches = 0
-    directions = [
-        "up",
-        "down",
-        "left",
-        "right",
-        "topLeft",
-        "topRight",
-        "bottomLeft",
-        "bottomRight",
-    ]
-
-    # Go over every character in the grid
-    for row in range(len(grid)):
-        for col in range(len(grid[row])):
-            # If the first letter of the word is found, search for the rest of
-            # the word in every possible direction and count the number of matches
-            if grid[row][col] == firstLetter:
-                charsLeft = word[1:]
-                for direction in directions:
-                    if isWordConnected(row, col, grid, charsLeft, word, direction):
-                        numMatches += 1
-
-    print(f"{word} occurs {numMatches} times in {filename}!")
-
-
-def isWordConnected(row, col, grid, charsLeft, word, direction) -> bool:
-    # Base case for recursion (empty string means whole word found)
-    if not charsLeft:
-        return True
-
-    directions = {
-        "up": {"row": row - 1, "col": col},
-        "down": {"row": row + 1, "col": col},
-        "left": {"row": row, "col": col - 1},
-        "right": {"row": row, "col": col + 1},
-        "topLeft": {"row": row - 1, "col": col - 1},
-        "topRight": {"row": row - 1, "col": col + 1},
-        "bottomLeft": {"row": row + 1, "col": col - 1},
-        "bottomRight": {"row": row + 1, "col": col + 1},
-    }
-
-    targetRow = directions[direction]["row"]
-    targetCol = directions[direction]["col"]
-
-    targetChar = charsLeft[0]
-
-    if isValidCoordinate(targetRow, targetCol, grid):
-        char = grid[targetRow][targetCol]
-
-        # If target character has been found, search the next one
-        if char == targetChar:
-            return isWordConnected(
-                targetRow, targetCol, grid, charsLeft[1:], word, direction
-            )
-
-    return False
-
-
-def isValidCoordinate(row, col, grid) -> bool:
-    minIdx = 0
-    maxRowIdx = len(grid) - 1
-    maxColIdx = len(grid[0]) - 1
-    return (minIdx <= row <= maxRowIdx) and (minIdx <= col <= maxColIdx)
+    targetWord = input("Enter target word: ").upper()
+    puzzle = Puzzle(filename, targetWord)
+    solution = puzzle.solve()
+    print(f"The word {targetWord} occurs {solution} times in {filename}.")
 
 
 def createGridFromFile(filename) -> list[list]:
